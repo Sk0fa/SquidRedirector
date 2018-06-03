@@ -1,5 +1,4 @@
 #!/usr/bin/python3
-
 import sys
 import os
 import logging
@@ -12,23 +11,22 @@ class Redirector:
     def __init__(self):
         sys.excepthook = self.except_hook
         self.base_dir = '/etc/squid-redirect'
-        self.redirectors_file = os.path.join(self.base_dir, 'squid_redirector.json')
-        self.redirectors = {}
+        self.redirects_file = os.path.join(self.base_dir, 'squid_redirector.json')
+        self.redirects = {}
         self.logger = self.get_logger()
-        self.last_redirectors_modify = 0
+        self.last_redirects_modify = 0
         self.domain_re = re.compile(r'https?://([a-zA-Z0-9\.-]+)(?:/.*?)?')
-        self.start()
 
     def start(self):
         for line in sys.stdin:
-            if self.last_redirectors_modify != os.stat(self.redirectors_file):
-                self.update_redirectors()
+            if self.last_redirects_modify != os.stat(self.redirects_file):
+                self.update_redirects()
+                self.last_redirects_modify = os.stat(self.redirects_file)
 
             request_info = line.split()
             if not request_info:
                 continue
-            self.handle_request(request_info[0])
-            
+            self.handle_request(request_info[0])          
 
     def handle_request(self, url):
         redirect_url = self.get_redirect_by_url(url)
@@ -43,16 +41,19 @@ class Redirector:
         sys.stdout.flush()
 
     def get_redirect_by_url(self, url):
-        for u in self.redirectors:
-            match = self.domain_re.search(url)
+        match = self.domain_re.search(url)
+
+        for u in self.redirects:
             if match and u in match.group(1):
-                return self.redirectors[u]
+                return self.redirects[u]
+
         return url
 
-    def update_redirectors(self):
-        with open(self.redirectors_file, 'r') as f:
+    def update_redirects(self):
+        with open(self.redirects_file, 'r') as f:
             data = f.read()
-        self.redirectors = json.loads(data)
+
+        self.redirects = json.loads(data)
 
     def get_logger(self):
         logger = logging.getLogger('squidRedirectLogger')
@@ -75,4 +76,4 @@ class Redirector:
 
 
 if __name__ == '__main__':
-    Redirector()
+    Redirector().start()

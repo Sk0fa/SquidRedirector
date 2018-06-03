@@ -25,6 +25,10 @@ url_rewrite_program /path/to/python3 /etc/squid-redirect/squid_redirector.py
 mkdir -p "$RPM_BUILD_ROOT"
 cp -R * "$RPM_BUILD_ROOT"
 
+%post
+service rsyslog restart
+logrotate -d /etc/logrotate.d/squid-redirector
+
 %files
 %defattr(-,root,root,-)
 /etc/squid-redirect/squid_redirector.py
