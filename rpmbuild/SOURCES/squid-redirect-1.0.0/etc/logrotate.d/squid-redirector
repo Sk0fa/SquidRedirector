@@ -1,0 +1,8 @@
+/var/log/squid-redirector/*log {
+	daily
+	rotate 2
+	create
+	dateext
+	missingok
+	size 20M
+}
